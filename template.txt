@@ -1,0 +1,207 @@
+/**
+ *  Copyright Murex S.A.S., 2003-2024. All Rights Reserved.
+ * 
+ *  This software program is proprietary and confidential to Murex S.A.S and its affiliates ("Murex") and, without limiting the generality of the foregoing reservation of rights, shall not be accessed, used, reproduced or distributed without the
+ *  express prior written consent of Murex and subject to the applicable Murex licensing terms. Any modification or removal of this copyright notice is expressly prohibited.
+ */
+package murex.connectivity.mdit.gui.template;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+
+import static java.lang.Math.max;
+
+import java.text.SimpleDateFormat;
+
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Locale;
+import java.util.Optional;
+
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JSeparator;
+import javax.swing.JTextArea;
+import javax.swing.SwingConstants;
+import javax.swing.border.EmptyBorder;
+
+import static murex.connectivity.basic.utils.StringUtil.EMPTY_STRING;
+import murex.connectivity.mdit.common.runs.RunConfigurationTemplateBean;
+import static murex.connectivity.mdit.gui.constants.GuiConstants.ACTION;
+import static murex.connectivity.mdit.gui.constants.GuiConstants.DATE;
+import static murex.connectivity.mdit.gui.constants.GuiConstants.DATE_LABEL;
+import static murex.connectivity.mdit.gui.constants.GuiConstants.DEFAULT;
+import static murex.connectivity.mdit.gui.constants.GuiConstants.DEFAULT_FONT_SIZE;
+import static murex.connectivity.mdit.gui.constants.GuiConstants.DESCRIPTION;
+import static murex.connectivity.mdit.gui.constants.GuiConstants.HEIGHT_PADDING;
+import static murex.connectivity.mdit.gui.constants.GuiConstants.INTERFACE_NAME;
+import static murex.connectivity.mdit.gui.constants.GuiConstants.INTERFACE_NICKNAME;
+import static murex.connectivity.mdit.gui.constants.GuiConstants.LIGHTER_GREY;
+import static murex.connectivity.mdit.gui.constants.GuiConstants.LIGHT_GREY;
+import static murex.connectivity.mdit.gui.constants.GuiConstants.MDS;
+import static murex.connectivity.mdit.gui.constants.GuiConstants.MDS_LABEL;
+import static murex.connectivity.mdit.gui.constants.GuiConstants.MODE_LABEL;
+import static murex.connectivity.mdit.gui.constants.GuiConstants.NAME_LABEL;
+import static murex.connectivity.mdit.gui.constants.GuiConstants.V_GAP;
+import murex.connectivity.mdit.gui.run.overview.details.table.MaxLinesTextArea;
+
+import murex.ui.components.containers.layouts.WrappableHorizontalLayout;
+import murex.ui.components.containers.layouts.WrappableVerticalLayout;
+
+
+public class TemplateDetailsPanelUI extends JPanel {
+
+    //~ ----------------------------------------------------------------------------------------------------------------
+    //~ Static fields/initializers 
+    //~ ----------------------------------------------------------------------------------------------------------------
+
+    private static int DESCRIPTION_AREA_MAX_WIDTH = 360;
+    private static final int LABELS_GAP = 4;
+    private static final String ARIAL = "Arial";
+    private static final String MODE = "mode";
+    private static final String NAME = "name";
+
+    //~ ----------------------------------------------------------------------------------------------------------------
+    //~ Instance fields 
+    //~ ----------------------------------------------------------------------------------------------------------------
+
+    private int descriptionHeight = 0;
+
+    //~ ----------------------------------------------------------------------------------------------------------------
+    //~ Constructors 
+    //~ ----------------------------------------------------------------------------------------------------------------
+
+    public TemplateDetailsPanelUI(RunConfigurationTemplateBean runConfigurationTemplateBean) {
+        setLayout(new WrappableHorizontalLayout(V_GAP, V_GAP));
+        setBorder(new EmptyBorder(V_GAP, V_GAP, V_GAP, V_GAP));
+        setBackground(LIGHTER_GREY);
+
+        JPanel description = createDescriptionPanel(runConfigurationTemplateBean.getDescription());
+
+        add(joinVerticalPanels(createPanel(INTERFACE_NICKNAME, INTERFACE_NAME, "interface"), createPanel(NAME_LABEL, runConfigurationTemplateBean.getName(), NAME)));
+        add(description);
+        add(getSeparator((int) description.getPreferredSize().getHeight()));
+        add(joinVerticalPanels(createPanel(ACTION, runConfigurationTemplateBean.getAction(), "action"), createPanel(MODE_LABEL, runConfigurationTemplateBean.getMode(), MODE)));
+        add(getSeparator((int) description.getPreferredSize().getHeight()));
+        add(joinVerticalPanels(createPanel(DATE_LABEL, formatDate(runConfigurationTemplateBean.getImportExportDate()), DATE), createPanel(MDS_LABEL, formatMds(runConfigurationTemplateBean.getMds()), MDS)));
+    }
+
+    //~ ----------------------------------------------------------------------------------------------------------------
+    //~ Methods 
+    //~ ----------------------------------------------------------------------------------------------------------------
+
+    private String formatDate(long importExportDate) {
+        return Optional.of(importExportDate).filter(date -> date != 0L).map(date -> new SimpleDateFormat("MM/dd/yyyy", Locale.ENGLISH).format(new Date(date))).orElse(DEFAULT);
+    }
+
+    private String formatMds(String mds) {
+        return mds.equals(EMPTY_STRING) ? DEFAULT : mds;
+    }
+
+    private JPanel joinVerticalPanels(JPanel up, JPanel down) {
+        JPanel panel = new JPanel();
+
+        panel.setLayout(new WrappableVerticalLayout(0, HEIGHT_PADDING));
+        panel.setOpaque(true);
+        panel.setBackground(Color.GREEN);
+        panel.add(up);
+        panel.add(down);
+        return panel;
+    }
+
+    private JPanel createPanel(String label, String value, String name) {
+        JPanel panel = new JPanel();
+        panel.setName(name + "-panel-tdp");
+        panel.setLayout(new WrappableVerticalLayout(0, LABELS_GAP));
+        JLabel labelComponent = createLabel(label, Color.DARK_GRAY, name + "-label-tdp");
+        JLabel valueComponent = createLabel(value, Color.BLACK, name + "-input-tdp");
+        panel.add(labelComponent);
+        panel.add(valueComponent);
+        panel.setOpaque(false);
+        return panel;
+    }
+
+    private JLabel createLabel(String text, Color backgroundColor, String name) {
+        JLabel label = new JLabel(text);
+        label.setName(name);
+        label.setForeground(backgroundColor);
+        label.setOpaque(true);
+        label.setBackground(Color.YELLOW);
+        label.setFont(new Font(ARIAL, Font.PLAIN, DEFAULT_FONT_SIZE));
+        label.setAlignmentX(0);
+        label.setAlignmentY(0);
+        return label;
+    }
+
+    private JPanel createDescriptionPanel(String description) {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BorderLayout(0, LABELS_GAP));
+        JLabel descriptionLabel = createLabel(DESCRIPTION, Color.DARK_GRAY, "description-label-tdp");
+        JTextArea descriptionInput = getDescriptionJTextArea(description);
+        descriptionInput.setName("description-input-tdp");
+        panel.add(descriptionLabel, BorderLayout.NORTH);
+        panel.add(descriptionInput, BorderLayout.CENTER);
+        panel.setOpaque(true);
+        panel.setBackground(Color.ORANGE);
+        panel.setAlignmentX(0);
+        panel.setAlignmentY(0);
+        return panel;
+    }
+
+    private JTextArea getDescriptionJTextArea(String description) {
+        MaxLinesTextArea descriptionInput = new MaxLinesTextArea(description, 5, 360, 0);
+//        descriptionInput.setFont(new Font(ARIAL, Font.PLAIN, DEFAULT_FONT_SIZE));
+        descriptionInput.setEditable(false);
+        descriptionInput.setOpaque(true);
+        descriptionInput.setBackground(Color.GREEN);
+        descriptionInput.setForeground(Color.BLACK);
+        return descriptionInput;
+    }
+
+//    private int getWidthOfDescriptionTextArea(String text) {
+//        return Arrays.stream(text.split("\\r?\\n")).mapToInt(this::getWidthOfString).max().orElse(0) + 1;
+//    }
+//
+//    private int getWidthOfString(String word) {
+//        int currentLineWidth = 0;
+//        int lineCounter = 0;
+//        int distanceFromSpace = 0;
+//        FontMetrics fontMetrics = this.getFontMetrics(new Font(ARIAL, Font.PLAIN, DEFAULT_FONT_SIZE));
+//
+//        for (int i = 0; i < word.length(); i++) {
+//            int charWidth = fontMetrics.charWidth(word.charAt(i));
+//
+//            boolean b = (word.charAt(i) == ' ') || (word.charAt(i) == '\n') || (word.charAt(i) == '\t');
+//            if ((currentLineWidth + charWidth) <= DESCRIPTION_AREA_MAX_WIDTH) {
+//                currentLineWidth += charWidth;
+//
+//                distanceFromSpace += charWidth;
+//                if (b) {
+//                    distanceFromSpace = 0;
+//                }
+//            } else {
+//                if (!(b && ((currentLineWidth + charWidth + 1) == DESCRIPTION_AREA_MAX_WIDTH))) {
+//                    lineCounter += 1;
+//                    currentLineWidth = charWidth + distanceFromSpace;
+////                    DESCRIPTION_AREA_MAX_WIDTH = max(DESCRIPTION_AREA_MAX_WIDTH, currentLineWidth);
+////                    currentLineWidth += distanceFromSpace;
+//                }
+//            }
+//        }
+//
+//        descriptionHeight += (lineCounter + 1) * fontMetrics.getHeight();
+//        return (lineCounter > 0) ? DESCRIPTION_AREA_MAX_WIDTH : currentLineWidth;
+//    }
+
+    private JSeparator getSeparator(int descriptionHeight) {
+        final JSeparator separator = new JSeparator(SwingConstants.VERTICAL);
+        separator.setName("separator-panel-tdp");
+        separator.setForeground(LIGHT_GREY);
+        separator.setOpaque(true);
+        separator.setPreferredSize(new Dimension(1, descriptionHeight));
+        return separator;
+    }
+}
